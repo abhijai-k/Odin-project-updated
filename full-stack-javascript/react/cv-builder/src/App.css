@@ -1,0 +1,17 @@
+.App {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+input {
+  display: block;
+  margin: 8px 0;
+  padding: 8px;
+  width: 100%;
+}
