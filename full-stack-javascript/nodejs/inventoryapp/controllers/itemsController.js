@@ -1,8 +1,18 @@
+require('dotenv').config();
 const express = require('express');
-const router = express.Router();
-const db = require('../db');
+const methodOverride = require('method-override');
+const app = express();
 
-router.get('/', async (req, res) => {
-  const { rows } = await db.query(`SELECT items.*, categories.name AS category_name FROM items LEFT JOIN categories ON items.category_id = categories.id`);
-  res.render('items/index', { items: rows });
-});
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
+
+const itemsRoutes = require('./controllers/itemsController');
+const categoriesRoutes = require('./controllers/categoriesController');
+
+app.use('/items', itemsRoutes);
+app.use('/categories', categoriesRoutes);
+
+app.get('/', (req, res) => res.redirect('/items'));
+
+app.listen(3000, () => console.log('Server on http://localhost:3000'));

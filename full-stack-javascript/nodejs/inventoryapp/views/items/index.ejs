@@ -1,0 +1,15 @@
+<%- include('../partials/header') %>
+<h1>Items</h1>
+<a href="/items/new">Add New Item</a>
+<ul>
+  <% items.forEach(item => { %>
+    <li>
+      <strong><%= item.name %></strong> — <%= item.quantity %> in stock (<%= item.category_name || 'Uncategorized' %>)
+      <form method="POST" action="/items/<%= item.id %>?_method=DELETE" style="display:inline">
+        <input type="password" name="password" placeholder="Admin password" required />
+        <button type="submit">Delete</button>
+      </form>
+    </li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>
