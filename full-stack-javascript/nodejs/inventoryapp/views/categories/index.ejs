@@ -1,0 +1,16 @@
+<%- include('../partials/header') %>
+<h1>Categories</h1>
+<a href="/categories/new">Add New Category</a>
+<ul>
+  <% categories.forEach(category => { %>
+    <li>
+      <strong><%= category.name %></strong> — <%= category.description %>
+      <a href="/categories/<%= category.id %>/edit">Edit</a>
+      <form method="POST" action="/categories/<%= category.id %>?_method=DELETE" style="display:inline">
+        <input type="password" name="password" placeholder="Admin password" required />
+        <button type="submit">Delete</button>
+      </form>
+    </li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>

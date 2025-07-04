@@ -1,8 +1,13 @@
-<%- include('../partials/header') %>
-<h1>Edit Category</h1>
-<form action="/categories/<%= category.id %>?_method=PUT" method="POST">
-  <input type="text" name="name" value="<%= category.name %>" required />
-  <textarea name="description"><%= category.description %></textarea>
+<h1>Edit Item</h1>
+<form action="/items/<%= item.id %>?_method=PUT" method="POST">
+  <input type="text" name="name" value="<%= item.name %>" required />
+  <textarea name="description"><%= item.description %></textarea>
+  <input type="number" name="quantity" value="<%= item.quantity %>" required />
+  <select name="category_id">
+    <% categories.forEach(category => { %>
+      <option value="<%= category.id %>" <%= item.category_id === category.id ? 'selected' : '' %>><%= category.name %></option>
+    <% }) %>
+  </select>
   <button type="submit">Update</button>
 </form>
 <%- include('../partials/footer') %>
