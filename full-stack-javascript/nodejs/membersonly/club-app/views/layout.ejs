@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Club App</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Club App</h1>
+    <% if (user) { %>
+      <form action="/logout" method="POST"><button>Logout</button></form>
+    <% } else { %>
+      <a href="/login">Login</a> | <a href="/signup">Signup</a>
+    <% } %>
+  </header>
+  <main><%- body %></main>
+</body>
+</html>
