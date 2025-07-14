@@ -1,0 +1,24 @@
+<% include('layout') %>
+<h2>Messages</h2>
+<% if (user) { %>
+  <a href="/new">Create Message</a>
+  <% if (!user.membership_status) { %>
+    <a href="/join">Join Club</a>
+  <% } %>
+<% } %>
+<ul>
+  <% messages.forEach(msg => { %>
+    <li>
+      <h3><%= msg.title %></h3>
+      <p><%= msg.text %></p>
+      <% if (user?.membership_status) { %>
+        <small>by <%= msg.first_name %> <%= msg.last_name %> on <%= new Date(msg.timestamp).toLocaleString() %></small>
+      <% } %>
+      <% if (user?.admin) { %>
+        <form method="POST" action="/delete/<%= msg.id %>?_method=DELETE">
+          <button>Delete</button>
+        </form>
+      <% } %>
+    </li>
+  <% }) %>
+</ul>
