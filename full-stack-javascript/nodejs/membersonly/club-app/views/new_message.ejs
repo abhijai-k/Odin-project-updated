@@ -1,0 +1,7 @@
+<% include('layout') %>
+<h2>New Message</h2>
+<form action="/new" method="POST">
+  <input name="title" placeholder="Title" required>
+  <textarea name="text" placeholder="Your message" required></textarea>
+  <button type="submit">Post</button>
+</form>
