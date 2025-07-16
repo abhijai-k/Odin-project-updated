@@ -1,71 +1,72 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const path = require('path');
+const session = require('express-session');
+const flash = require('connect-flash');
 const passport = require('passport');
-const { body, validationResult } = require('express-validator');
-const db = require('../models/db');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
+const methodOverride = require('method-override');
+require('dotenv').config();
 
-const router = express.Router();
+const db = require('./models/db');
+const app = express();
 
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-router.get('/signup', (req, res) => {
-  res.render('signup', { errors: [], formData: {} });
-});
+app.use(express.urlencoded({ extended: false }));
+app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true
+}));
 
-router.post('/signup', [
-  body('first_name').trim().notEmpty(),
-  body('last_name').trim().notEmpty(),
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
-  body('confirmPassword').custom((value, { req }) => value === req.body.password)
-], async (req, res) => {
-  const errors = validationResult(req);
-  const { first_name, last_name, email, password, adminCode } = req.body;
-  if (!errors.isEmpty()) {
-    return res.render('signup', { errors: errors.array(), formData: req.body });
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(
+  { usernameField: 'email' },
+  async (email, password, done) => {
+    try {
+      const result = await db.query('SELECT * FROM users WHERE email=$1', [email]);
+      const user = result.rows[0];
+      if (!user) return done(null, false, { message: 'User not found' });
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) return done(null, false, { message: 'Incorrect password' });
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const isAdmin = adminCode === process.env.ADMIN_CODE;
-  await db.query(
-    'INSERT INTO users (first_name, last_name, email, password, admin) VALUES ($1, $2, $3, $4, $5)',
-    [first_name, last_name, email, hashedPassword, isAdmin]
-  );
-  res.redirect('/login');
-});
+));
 
+passport.serializeUser((user, done) => done(null, user.id));
 
-router.get('/login', (req, res) => {
-  res.render('login', { error: req.flash('error') });
-});
-
-router.post('/login',
-  passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-  })
-);
-
-
-router.post('/logout', (req, res) => {
-  req.logout(err => {
-    if (err) return next(err);
-    res.redirect('/');
-  });
-});
-
-
-router.get('/join', (req, res) => {
-  res.render('join_club', { error: null });
-});
-
-router.post('/join', async (req, res) => {
-  if (req.body.code === process.env.SECRET_CODE) {
-    await db.query('UPDATE users SET membership_status=true WHERE id=$1', [req.user.id]);
-    res.redirect('/');
-  } else {
-    res.render('join_club', { error: 'Incorrect code' });
+passport.deserializeUser(async (id, done) => {
+  try {
+    const result = await db.query('SELECT * FROM users WHERE id=$1', [id]);
+    done(null, result.rows[0]);
+  } catch (err) {
+    done(err);
   }
 });
 
-module.exports = router;
+const indexRoutes = require('./routes/index');
+const authRoutes = require('./routes/auth');
+
+app.use((req, res, next) => {
+  res.locals.user = req.user;
+  next();
+});
+
+app.use('/', indexRoutes);
+app.use('/', authRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
